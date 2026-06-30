@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lease Portal — Admin</title>
+<meta name="theme-color" content="#0A3D68">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --navy:#0A3D68; --navy-dark:#072A49; --gold:#C9A227; --gold-light:#E9C95D;
+    --bg:#F4F6F8; --card:#FFFFFF; --text:#1C2B36; --muted:#6B7B85;
+    --ok:#1E7A4C; --ok-bg:#E6F4EC; --warn:#B8860B; --warn-bg:#FFF3DC;
+    --danger:#B3261E; --danger-bg:#FDEAE8; --border:#E1E6EA;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{background:linear-gradient(135deg,var(--navy),var(--navy-dark));color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:60;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  .topbar .brand{display:flex;align-items:center;gap:10px;}
+  .topbar .brand .badge{width:34px;height:34px;border-radius:8px;background:var(--gold);color:var(--navy-dark);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+  .topbar .brand .titles{line-height:1.15;}
+  .topbar .brand .titles .t1{font-weight:700;font-size:14.5px;}
+  .topbar .brand .titles .t2{font-size:11px;opacity:.8;}
+  .topbar .actions{display:flex;gap:8px;}
+  .iconbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 11px;border-radius:7px;font-size:12px;cursor:pointer;}
+
+  .wrap{max-width:880px;margin:0 auto;padding:16px;padding-bottom:90px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .center-screen{min-height:90vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .login-card{background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(10,61,104,.12);padding:30px 26px;width:100%;max-width:380px;}
+  .login-card .logo{width:56px;height:56px;border-radius:14px;background:var(--navy);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;margin:0 auto 14px;}
+  .login-card h1{font-size:18px;text-align:center;margin:0 0 4px;color:var(--navy-dark);}
+  .login-card .sub{text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:22px;}
+
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--navy-dark);margin-bottom:6px;}
+  input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14.5px;background:#fff;color:var(--text);font-family:inherit;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);}
+  .field{margin-bottom:14px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--navy);color:#fff;border:none;padding:11px 16px;border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .btn:active{background:var(--navy-dark);}
+  .btn.block{width:100%;}
+  .btn.gold{background:var(--gold);color:var(--navy-dark);}
+  .btn.outline{background:transparent;border:1.5px solid var(--navy);color:var(--navy);}
+  .btn.danger-outline{background:transparent;border:1.5px solid var(--danger);color:var(--danger);}
+  .btn.sm{padding:8px 12px;font-size:12.5px;}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .err{color:var(--danger);font-size:12.5px;margin-top:8px;min-height:14px;}
+  .msg-ok{color:var(--ok);font-size:12.5px;margin-top:8px;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+  @media(max-width:640px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(10,61,104,.06);}
+  .stat-card .num{font-size:22px;font-weight:800;color:var(--navy-dark);}
+  .stat-card .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+  .stat-card.ok .num{color:var(--ok);}
+  .stat-card.warn .num{color:var(--warn);}
+  .stat-card.danger .num{color:var(--danger);}
+
+  .toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+  .toolbar input[type=text]{flex:1;min-width:140px;}
+  .toolbar select{width:auto;}
+  .pill-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .pill{padding:7px 13px;border-radius:20px;font-size:12.5px;font-weight:600;background:#fff;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;}
+  .pill.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  .section-title{font-size:13px;font-weight:700;color:var(--navy-dark);text-transform:uppercase;letter-spacing:.4px;margin:22px 0 10px;}
+
+  .branch-card{background:var(--card);border-radius:13px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(10,61,104,.06);display:flex;gap:12px;align-items:flex-start;}
+  .branch-card .chk{margin-top:3px;width:18px;height:18px;accent-color:var(--navy);flex-shrink:0;}
+  .branch-card .bc-main{flex:1;min-width:0;}
+  .branch-card .bc-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;}
+  .branch-card .bc-name{font-weight:700;font-size:14.5px;color:var(--navy-dark);}
+  .branch-card .bc-meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .branch-card .bc-progress{display:flex;align-items:center;gap:8px;margin-top:10px;}
+  .pbar{flex:1;height:8px;background:var(--border);border-radius:5px;overflow:hidden;}
+  .pbar > div{height:100%;border-radius:5px;}
+  .bc-pct{font-size:12.5px;font-weight:700;color:var(--navy-dark);min-width:36px;text-align:right;}
+  .status-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .status-chip.complete{background:var(--ok-bg);color:var(--ok);}
+  .status-chip.partial{background:var(--warn-bg);color:var(--warn);}
+  .status-chip.empty{background:var(--danger-bg);color:var(--danger);}
+  .status-chip.inactive{background:#ECEFF1;color:var(--muted);}
+  .bc-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+
+  .followup-bar{position:fixed;bottom:0;left:0;right:0;background:var(--navy-dark);color:#fff;padding:12px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;z-index:70;box-shadow:0 -4px 16px rgba(0,0,0,.2);}
+  .followup-bar.show{display:flex;}
+  .followup-bar .fb-text{font-size:13px;}
+  .followup-bar .fb-text b{color:var(--gold-light);}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(7,42,73,.55);display:none;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;padding:24px 14px;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:#fff;border-radius:16px;max-width:600px;width:100%;padding:22px;margin-top:10px;}
+  .modal h2{margin:0 0 4px;font-size:17px;color:var(--navy-dark);}
+  .modal .modal-sub{font-size:12px;color:var(--muted);margin-bottom:18px;}
+  .modal-close{float:right;background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+  @media(max-width:520px){.grid2{grid-template-columns:1fr;}}
+
+  .detail-section{margin-bottom:6px;}
+  .detail-section .ds-title{font-weight:700;font-size:13px;color:var(--navy-dark);margin:16px 0 8px;padding-top:10px;border-top:1px solid var(--border);}
+  .detail-section:first-child .ds-title{border-top:none;padding-top:0;margin-top:0;}
+  .field-label-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+  .field-tag{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;}
+  .tag-filled{background:var(--ok-bg);color:var(--ok);}
+  .tag-pending{background:var(--danger-bg);color:var(--danger);}
+
+  textarea.msgbox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;min-height:220px;white-space:pre-wrap;}
+
+  footer{text-align:center;color:var(--muted);font-size:11.5px;padding:24px 0 8px;}
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--navy-dark);color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+
+  /* offscreen render target for image export */
+  #report-render{position:fixed;left:-9999px;top:0;width:760px;background:#fff;padding:24px;font-family:inherit;}
+  #report-render .rep-head{background:var(--navy);color:#fff;padding:16px 20px;border-radius:10px 10px 0 0;}
+  #report-render .rep-head .t1{font-weight:800;font-size:17px;}
+  #report-render .rep-head .t2{font-size:12px;opacity:.85;margin-top:2px;}
+  #report-render table{width:100%;border-collapse:collapse;font-size:12px;}
+  #report-render th{background:#EEF3F7;color:var(--navy-dark);text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);}
+  #report-render td{padding:8px 10px;border-bottom:1px solid var(--border);}
+  #report-render .rep-foot{text-align:center;color:var(--muted);font-size:11px;padding:14px 0 4px;}
+</style>
+</head>
+<body>
+
+<div id="screen-login" class="screen active">
+  <div class="center-screen">
+    <div class="login-card">
+      <div class="logo">PL</div>
+      <h1>Admin Login</h1>
+      <div class="sub">Premises Lease Data Portal · RO Bengaluru North</div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-pw" placeholder="Admin password">
+      </div>
+      <button class="btn block" onclick="adminLogin()">Login</button>
+      <div class="err" id="login-err"></div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-dash" class="screen">
+  <div class="topbar">
+    <div class="brand">
+      <div class="badge">PL</div>
+      <div class="titles">
+        <div class="t1">Admin Panel</div>
+        <div class="t2">Premises Lease Data Portal</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="iconbtn" onclick="openModal('modal-password')">Password</button>
+      <button class="iconbtn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num" id="st-total">0</div><div class="lbl">Total Branches</div></div>
+      <div class="stat-card ok"><div class="num" id="st-complete">0</div><div class="lbl">Fully Submitted</div></div>
+      <div class="stat-card warn"><div class="num" id="st-partial">0</div><div class="lbl">Partially Submitted</div></div>
+      <div class="stat-card danger"><div class="num" id="st-empty">0</div><div class="lbl">Not Started</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="search-box" placeholder="Search branch name or DP code..." oninput="renderBranches()">
+      <button class="btn gold sm" onclick="openAddBranch()">+ Add Branch</button>
+    </div>
+    <div class="toolbar">
+      <div class="pill-tabs" id="filter-tabs">
+        <div class="pill active" data-f="all" onclick="setFilter('all')">All</div>
+        <div class="pill" data-f="pending" onclick="setFilter('pending')">Pending</div>
+        <div class="pill" data-f="complete" onclick="setFilter('complete')">Complete</div>
+        <div class="pill" data-f="notstarted" onclick="setFilter('notstarted')">Not Started</div>
+        <div class="pill" data-f="inactive" onclick="setFilter('inactive')">Inactive</div>
+      </div>
+    </div>
+
+    <div class="section-title">Reports</div>
+    <div class="toolbar">
+      <button class="btn outline sm" onclick="exportPendingExcel()">⬇ Pending Report — Excel</button>
+      <button class="btn outline sm" onclick="exportPendingPDF()">⬇ Pending Report — PDF</button>
+      <button class="btn outline sm" onclick="exportPendingImage()">⬇ Pending Report — Image</button>
+      <button class="btn outline sm" onclick="exportFullExcel()">⬇ Full Data — Excel</button>
+    </div>
+
+    <div class="section-title" id="branch-list-title">Branches</div>
+    <div id="branch-list"></div>
+
+    <footer>Created by Pawan Singh · 894257</footer>
+  </div>
+
+  <div class="followup-bar" id="followup-bar">
+    <div class="fb-text"><b id="fb-count">0</b> branch(es) selected for follow-up</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn sm outline" style="background:transparent;border-color:#fff;color:#fff;" onclick="clearSelection()">Clear</button>
+      <button class="btn sm gold" onclick="openFollowupModal()">Generate Follow-up</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT BRANCH MODAL -->
+<div class="modal-overlay" id="modal-branch">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-branch')">×</button>
+    <h2 id="branch-modal-title">Add Branch</h2>
+    <div class="modal-sub">Branch master details</div>
+    <input type="hidden" id="bm-mode">
+    <div class="grid2">
+      <div class="field"><label>Branch DP Code</label><input type="number" id="bm-dp"></div>
+      <div class="field"><label>IFSC Code</label><input type="text" id="bm-ifsc"></div>
+    </div>
+    <div class="field"><label>Branch Name</label><input type="text" id="bm-name"></div>
+    <div class="grid2">
+      <div class="field"><label>Branch Type</label>
+        <select id="bm-type">
+          <option>VERY LARGE BRANCH</option><option>LARGE BRANCH</option><option>MEDIUM BRANCH</option>
+          <option>SMALL BRANCH</option><option>EXCEPTIONALLY LARGE BRANCH</option><option>ADMN.UNITS</option>
+        </select>
+      </div>
+      <div class="field" id="bm-pin-wrap"><label>Default PIN</label><input type="text" id="bm-pin" value="1234"></div>
+    </div>
+    <div class="field" id="bm-active-wrap" style="display:none;">
+      <label>Status</label>
+      <select id="bm-active"><option value="true">Active</option><option value="false">Inactive</option></select>
+    </div>
+    <button class="btn block" onclick="saveBranch()">Save Branch</button>
+    <div class="err" id="bm-err"></div>
+  </div>
+</div>
+
+<!-- BRANCH DETAIL MODAL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal" style="max-width:680px;">
+    <button class="modal-close" onclick="closeModal('modal-detail')">×</button>
+    <h2 id="detail-title">Branch Detail</h2>
+    <div class="modal-sub" id="detail-sub"></div>
+    <div id="detail-body"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn block" onclick="saveDetail()">Save Changes</button>
+      <button class="btn outline" onclick="resetPin(currentDetailDp)">Reset PIN</button>
+    </div>
+    <div class="msg-ok" id="detail-msg"></div>
+  </div>
+</div>
+
+<!-- FOLLOW-UP MODAL -->
+<div class="modal-overlay" id="modal-followup">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-followup')">×</button>
+    <h2>Follow-up Message</h2>
+    <div class="modal-sub">Edit if needed, then copy or share to your WhatsApp group</div>
+    <textarea class="msgbox" id="followup-text"></textarea>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn outline block" onclick="copyFollowup()">Copy Text</button>
+      <button class="btn gold block" onclick="shareFollowupWhatsApp()">Share via WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-password">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-password')">×</button>
+    <h2>Change Admin Password</h2>
+    <div class="field"><label>Current Password</label><input type="password" id="pw-old"></div>
+    <div class="field"><label>New Password</label><input type="password" id="pw-new"></div>
+    <button class="btn block" onclick="changePassword()">Update Password</button>
+    <div class="err" id="pw-err"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Offscreen render target used to generate the image-export report -->
+<div id="report-render"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+// ===================== CONFIG =====================
+const SUPABASE_URL = "https://ffbyevyaghwhudeunadc.supabase.co";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===================== FIELD DEFINITIONS (mirrors index.html) =====================
+const SECTIONS = [
+  { id:'landlord', title:'Landlord Details', fields:[
+    {k:'landlord_name', l:'Name of Landlord', t:'text'},
+    {k:'landlord_type', l:'Type of Landlord', t:'select', o:['RESIDENT INDIAN','TRUST','STATE GOVT DEPT','CENTRAL GOVT DEPT','PSU','NRI','OTHERS']},
+    {k:'gst_type', l:'Landlord GST Type', t:'select', o:['REGISTERED GST VENDOR WITH COMMERCIAL LICENSE','UNREGISTERED GST VENDOR WITH COMMERCIAL LICENSE','REGISTERED/UNREGISTERED LANDLORD OF RESIDENTIAL PROPERTY','GOVT. AUTHORITY']},
+    {k:'gl_number', l:'GL Number', t:'select', o:['420020100','420083150','420020805 HSN 997211','420020805 HSN 997206','420085560']},
+    {k:'charge_type', l:'Charge Type', t:'select', o:['NORMAL CHARGE','REVERSE CHARGE MECHANISM']},
+    {k:'landlord_mobile', l:'Mobile No. of Landlord', t:'tel'},
+    {k:'landlord_pan', l:'PAN No. of Landlord', t:'text'},
+    {k:'landlord_gst', l:'GST No. of Landlord', t:'text'},
+    {k:'landlord_address', l:'Address of Landlord with State & Pincode', t:'textarea'},
+  ]},
+  { id:'building', title:'Building Details', fields:[
+    {k:'building_type', l:'Type of Building', t:'select', o:['COMMERCIAL','RESIDENTIAL']},
+    {k:'building_age', l:'Age of Building (Years)', t:'number'},
+    {k:'parking', l:'Parking Space', t:'select', o:['AVAILABLE','LIMITED PARKING AVAILABLE','NOT AVAILABLE']},
+    {k:'power_load', l:'Power Load (KW)', t:'number'},
+    {k:'construction_type', l:'Type of Construction', t:'text'},
+    {k:'frontage', l:'Frontage (in Feet)', t:'number'},
+    {k:'toilets', l:'Toilets', t:'select', o:['SINGLE TOILET EARMARKED FOR LADIES','SEPARATE TOILET FOR LADIES & GENTS','COMMON TOILET FOR LADIES & GENTS SHARED WITH OTHER OCCUPANTS','NO TOILET AVAILABLE']},
+    {k:'distance_police', l:'Distance from Police Station (KM)', t:'number'},
+    {k:'property_value', l:'Value of Property as on Date (in Lakh)', t:'number'},
+    {k:'last_painting_date', l:'Date of Last Painting', t:'date'},
+    {k:'last_renovation_date', l:'Date of Last Renovation', t:'date'},
+    {k:'location_type', l:'Type of Location', t:'select', o:['CENTRE OF CITY','ON HIGHWAY','NEAR TO HIGHWAY','NEAR BUS STAND','NEAR RAILWAY STATION','NEAR MARKET AREA','RESIDENTIAL AREA','COMMERCIAL AREA']},
+  ]},
+  { id:'atm', title:'ATM Details', fields:[
+    {k:'atm_area', l:'ATM Area (SFT)', t:'number'},
+    {k:'other_atm_count', l:'No. of Other ATM/Unit Under Branch Lease', t:'number'},
+    {k:'atm_id_capex', l:'ATM ID of CAPEX ATM (if available)', t:'text'},
+    {k:'ramp_atm', l:'Ramp Available in ATM', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'railing_atm', l:'Railing Available in ATM', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'ramp_atm_reason', l:'Reason for Non-Availability of Ramp in ATM', t:'text', showIf:{k:'ramp_atm', eq:'NO'}},
+    {k:'ramp_atm_notice', l:'Notice Displayed for Non-Availability of Ramp in ATM', t:'select', o:['YES','NO','NOT REQUIRED'], showIf:{k:'ramp_atm', eq:'NO'}},
+  ]},
+  { id:'access', title:'Branch Accessibility', fields:[
+    {k:'ramp_branch', l:'Ramp Available in Branch', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'railing_branch', l:'Railing Available in Branch', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'ramp_branch_notice', l:'Notice Displayed for Non-Availability of Ramp', t:'select', o:['YES','NO','NOT REQUIRED'], showIf:{k:'ramp_branch', eq:'NO'}},
+    {k:'ramp_branch_reason', l:'Ramp Not Required — Reason', t:'text', showIf:{k:'ramp_branch', eq:'NOT REQUIRED'}},
+    {k:'lift_available', l:'Lift Available', t:'select', o:['YES','NO','NOT REQUIRED']},
+  ]},
+  { id:'strongroom', title:'Strong Room & Safes', fields:[
+    {k:'strong_room_area', l:'Strong Room Area (SFT)', t:'number'},
+    {k:'partition_available', l:'Partition Bifurcating Strong Room & Locker Area', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'sufficient_trtl', l:'Sufficient Required Category TRTL Safes Available', t:'select', o:['YES','NO']},
+    {k:'trtl_a', l:'No. of TRTL Safe Type A', t:'number'},
+    {k:'trtl_bb', l:'No. of TRTL Safe Type BB', t:'number'},
+    {k:'trtl_others', l:'No. of TRTL Safe Type Others', t:'number'},
+  ]},
+  { id:'charges', title:'Other Charges', fields:[
+    {k:'other_outgoing', l:'Other Outgoing (Property Tax/Maintenance) Payable by Bank', t:'select', o:['YES','NO']},
+    {k:'other_outgoing_amount', l:'Annual Expense Amount (if Yes)', t:'number', showIf:{k:'other_outgoing', eq:'YES'}},
+  ]},
+];
+const ALL_FIELDS = SECTIONS.flatMap(s=>s.fields);
+
+// Exact column order matching the original PDMS master sheet (for Full Data export)
+const EXPORT_COLUMNS = [
+  {label:'BRANCH DP CODE', key:'_dp'}, {label:'NAME OF BRANCH', key:'_name'},
+  {label:'NAME OF LANDLORD', key:'landlord_name'}, {label:'TYPE OF LANDLORD', key:'landlord_type'},
+  {label:'LANDLORD GST TYPE', key:'gst_type'}, {label:'GL NUMBER', key:'gl_number'},
+  {label:'CHARGE TYPE', key:'charge_type'}, {label:'MOBILE NO. OF LANDLORD', key:'landlord_mobile'},
+  {label:'PAN NO. OF LANDLORD', key:'landlord_pan'}, {label:'GST NO. OF LANDLORD', key:'landlord_gst'},
+  {label:'ADDRESS OF LANDLORD WITH STATE & PINCODE', key:'landlord_address'},
+  {label:'TYPE OF BUILDING', key:'building_type'}, {label:'AGE OF BUILDING IN YEAR', key:'building_age'},
+  {label:'PARKING SPACE', key:'parking'}, {label:'POWER LOAD IN KW', key:'power_load'},
+  {label:'TYPE OF CONSTRUCTION', key:'construction_type'}, {label:'FRONTAGE (IN FEET)', key:'frontage'},
+  {label:'TOILETS', key:'toilets'}, {label:'DISTANCE FROM POLICE STATION (KM)', key:'distance_police'},
+  {label:'VALUE OF PROPERTY AS ON DATE IN LAKH', key:'property_value'},
+  {label:'DATE OF LAST PAINTING', key:'last_painting_date'}, {label:'DATE OF LAST RENOVATION', key:'last_renovation_date'},
+  {label:'TYPE OF LOCATION', key:'location_type'}, {label:'ATM AREA (SFT)', key:'atm_area'},
+  {label:'NO OF OTHER ATM/UNIT UNDER BRANCH LEASE', key:'other_atm_count'},
+  {label:'ATM ID OF CAPEX ATM IF AVAILABLE', key:'atm_id_capex'},
+  {label:'RAMP AVAILABLE IN ATM', key:'ramp_atm'}, {label:'RAILING AVAILABLE IN ATM', key:'railing_atm'},
+  {label:'REASON FOR NON AVAILABILITY OF RAMP IN ATM', key:'ramp_atm_reason'},
+  {label:'NOTICE DISPLAYED FOR NON AVAILABILITY OF RAMP IN ATM', key:'ramp_atm_notice'},
+  {label:'RAMP AVAILABLE IN BRANCH', key:'ramp_branch'}, {label:'RAILING AVAILABLE IN BRANCH', key:'railing_branch'},
+  {label:'NOTICE DISPLAYED FOR NON AVAILABILITY OF RAMP', key:'ramp_branch_notice'},
+  {label:'RAMP NOT REQUIRED REASON', key:'ramp_branch_reason'}, {label:'LIFT AVAILABLE', key:'lift_available'},
+  {label:'STRONG ROOM AREA', key:'strong_room_area'},
+  {label:'PARTITION TO BIFURCATE STRONG ROOM & LOCKER AREA AVAILABLE', key:'partition_available'},
+  {label:'SUFFICIENT REQUIRED CATEGORY TRTL SAFES AVAILABLE', key:'sufficient_trtl'},
+  {label:'NO. OF TRTL SAFE TYPE A', key:'trtl_a'}, {label:'NO. OF TRTL SAFE TYPE BB', key:'trtl_bb'},
+  {label:'NO. OF TRTL SAFE TYPE OTHERS', key:'trtl_others'},
+  {label:'OTHER OUTGOING (PROPERTY TAX/MAINTENANCE) IF PAYABLE BY BANK', key:'other_outgoing'},
+  {label:'IF YES THEN MENTION ANNUAL EXPENSE AMOUNT', key:'other_outgoing_amount'},
+];
+
+// ===================== STATE =====================
+let branches = [];      // raw rows from lease_admin_list_branches
+let currentFilter = 'all';
+let selected = new Set();
+let currentDetailDp = null;
+
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+
+// ===================== AUTH =====================
+async function adminLogin(){
+  const pw = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent='';
+  if(!pw){ errEl.textContent='Enter password.'; return; }
+  try{
+    const {data, error} = await sb.rpc('lease_admin_login', {p_password: pw});
+    if(error) throw error;
+    if(!data){ errEl.textContent='Incorrect password.'; return; }
+    sessionStorage.setItem('lease_admin_ok','1');
+    showScreen('screen-dash');
+    await refreshData();
+  }catch(e){ errEl.textContent='Connection error.'; }
+}
+function logout(){ sessionStorage.removeItem('lease_admin_ok'); showScreen('screen-login'); document.getElementById('login-pw').value=''; }
+
+async function changePassword(){
+  const oldPw = document.getElementById('pw-old').value;
+  const newPw = document.getElementById('pw-new').value;
+  const errEl = document.getElementById('pw-err');
+  errEl.textContent='';
+  if(!newPw || newPw.length<6){ errEl.textContent='New password must be at least 6 characters.'; return; }
+  try{
+    const {data, error} = await sb.rpc('lease_admin_set_password', {p_old_password: oldPw, p_new_password: newPw});
+    if(error) throw error;
+    if(!data){ errEl.textContent='Current password incorrect.'; return; }
+    toast('Password updated');
+    closeModal('modal-password');
+    document.getElementById('pw-old').value=''; document.getElementById('pw-new').value='';
+  }catch(e){ errEl.textContent='Connection error.'; }
+}
+
+// ===================== DATA LOADING =====================
+function fieldApplicable(f, data){
+  if(!f.showIf) return true;
+  return data[f.showIf.k] === f.showIf.eq;
+}
+function isFilled(v){ return v!==null && v!==undefined && String(v).trim()!==''; }
+
+function computeStats(row){
+  const applicable = ALL_FIELDS.filter(f=>fieldApplicable(f,row));
+  const filled = applicable.filter(f=>isFilled(row[f.k]));
+  const missing = applicable.filter(f=>!isFilled(row[f.k]));
+  const total = applicable.length;
+  const pct = total ? Math.round(filled.length/total*100) : 0;
+  return {total, filledCount: filled.length, missing, pct};
+}
+
+async function refreshData(){
+  try{
+    const {data, error} = await sb.rpc('lease_admin_list_branches');
+    if(error) throw error;
+    branches = (data||[]).map(row=>{
+      const stats = computeStats(row);
+      return {...row, stats};
+    });
+    renderStats();
+    renderBranches();
+  }catch(e){
+    toast('Failed to load branch data');
+  }
+}
+
+function renderStats(){
+  const active = branches.filter(b=>b.active);
+  const complete = active.filter(b=>b.stats.pct===100).length;
+  const empty = active.filter(b=>b.stats.filledCount===0).length;
+  const partial = active.length - complete - empty;
+  document.getElementById('st-total').textContent = branches.length;
+  document.getElementById('st-complete').textContent = complete;
+  document.getElementById('st-partial').textContent = partial;
+  document.getElementById('st-empty').textContent = empty;
+}
+
+function setFilter(f){
+  currentFilter = f;
+  document.querySelectorAll('#filter-tabs .pill').forEach(p=>p.classList.toggle('active', p.dataset.f===f));
+  renderBranches();
+}
+
+function matchesFilter(b){
+  if(currentFilter==='inactive') return !b.active;
+  if(!b.active) return false;
+  if(currentFilter==='all') return true;
+  if(currentFilter==='complete') return b.stats.pct===100;
+  if(currentFilter==='notstarted') return b.stats.filledCount===0;
+  if(currentFilter==='pending') return b.stats.pct<100;
+  return true;
+}
+
+function renderBranches(){
+  const q = (document.getElementById('search-box').value||'').toLowerCase().trim();
+  const list = branches
+    .filter(matchesFilter)
+    .filter(b=> !q || b.branch_name.toLowerCase().includes(q) || String(b.dp_code).includes(q))
+    .sort((a,b)=> a.branch_name.localeCompare(b.branch_name));
+
+  document.getElementById('branch-list-title').textContent = `Branches (${list.length})`;
+  const host = document.getElementById('branch-list');
+  if(list.length===0){ host.innerHTML = '<div class="empty-state">No branches match this view.</div>'; return; }
+
+  host.innerHTML = list.map(b=>{
+    const statusClass = !b.active ? 'inactive' : (b.stats.pct===100?'complete':(b.stats.filledCount===0?'empty':'partial'));
+    const statusText = !b.active ? 'Inactive' : (b.stats.pct===100?'Complete':(b.stats.filledCount===0?'Not Started':'Partial'));
+    const barColor = b.stats.pct===100 ? 'var(--ok)' : (b.stats.pct===0?'var(--danger)':'var(--gold)');
+    const checked = selected.has(b.dp_code) ? 'checked' : '';
+    const updated = b.updated_at ? new Date(b.updated_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    return `
+      <div class="branch-card">
+        <input type="checkbox" class="chk" ${checked} ${b.active?'':'disabled'} onchange="toggleSelect(${b.dp_code}, this.checked)">
+        <div class="bc-main">
+          <div class="bc-top">
+            <div>
+              <div class="bc-name">${b.branch_name}</div>
+              <div class="bc-meta">DP: ${b.dp_code} · ${b.branch_type||''} · Last updated: ${updated}</div>
+            </div>
+            <span class="status-chip ${statusClass}">${statusText}</span>
+          </div>
+          <div class="bc-progress">
+            <div class="pbar"><div style="width:${b.stats.pct}%;background:${barColor}"></div></div>
+            <div class="bc-pct">${b.stats.pct}%</div>
+          </div>
+          <div class="bc-actions">
+            <button class="btn sm outline" onclick="openDetail(${b.dp_code})">View / Edit</button>
+            <button class="btn sm outline" onclick="openEditBranch(${b.dp_code})">Branch Info</button>
+            <button class="btn sm danger-outline" onclick="resetPin(${b.dp_code})">Reset PIN</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleSelect(dp, checked){
+  if(checked) selected.add(dp); else selected.delete(dp);
+  document.getElementById('fb-count').textContent = selected.size;
+  document.getElementById('followup-bar').classList.toggle('show', selected.size>0);
+}
+function clearSelection(){
+  selected.clear();
+  document.getElementById('followup-bar').classList.remove('show');
+  renderBranches();
+}
+
+// ===================== ADD / EDIT BRANCH =====================
+function openAddBranch(){
+  document.getElementById('branch-modal-title').textContent='Add Branch';
+  document.getElementById('bm-mode').value='add';
+  document.getElementById('bm-dp').value=''; document.getElementById('bm-dp').disabled=false;
+  document.getElementById('bm-ifsc').value=''; document.getElementById('bm-name').value='';
+  document.getElementById('bm-type').value='MEDIUM BRANCH';
+  document.getElementById('bm-pin').value='1234';
+  document.getElementById('bm-pin-wrap').style.display='block';
+  document.getElementById('bm-active-wrap').style.display='none';
+  document.getElementById('bm-err').textContent='';
+  openModal('modal-branch');
+}
+function openEditBranch(dp){
+  const b = branches.find(x=>x.dp_code===dp);
+  if(!b) return;
+  document.getElementById('branch-modal-title').textContent='Edit Branch';
+  document.getElementById('bm-mode').value='edit';
+  document.getElementById('bm-dp').value=b.dp_code; document.getElementById('bm-dp').disabled=true;
+  document.getElementById('bm-ifsc').value=b.ifsc_code||'';
+  document.getElementById('bm-name').value=b.branch_name||'';
+  document.getElementById('bm-type').value=b.branch_type||'MEDIUM BRANCH';
+  document.getElementById('bm-pin-wrap').style.display='none';
+  document.getElementById('bm-active-wrap').style.display='block';
+  document.getElementById('bm-active').value=String(b.active);
+  document.getElementById('bm-err').textContent='';
+  openModal('modal-branch');
+}
+async function saveBranch(){
+  const mode = document.getElementById('bm-mode').value;
+  const dp = Number(document.getElementById('bm-dp').value);
+  const ifsc = document.getElementById('bm-ifsc').value.trim();
+  const name = document.getElementById('bm-name').value.trim();
+  const type = document.getElementById('bm-type').value;
+  const errEl = document.getElementById('bm-err');
+  errEl.textContent='';
+  if(!dp || !name){ errEl.textContent='DP Code and Branch Name are required.'; return; }
+  try{
+    if(mode==='add'){
+      const pin = document.getElementById('bm-pin').value.trim() || '1234';
+      const {error} = await sb.rpc('lease_admin_add_branch', {p_dp_code:dp, p_ifsc:ifsc, p_branch_name:name, p_branch_type:type, p_pin:pin});
+      if(error) throw error;
+      toast('Branch added');
+    }else{
+      const active = document.getElementById('bm-active').value === 'true';
+      const {error} = await sb.rpc('lease_admin_update_branch', {p_dp_code:dp, p_ifsc:ifsc, p_branch_name:name, p_branch_type:type, p_active:active});
+      if(error) throw error;
+      toast('Branch updated');
+    }
+    closeModal('modal-branch');
+    await refreshData();
+  }catch(e){ errEl.textContent='Save failed — DP code may already exist.'; }
+}
+
+async function resetPin(dp){
+  if(!confirm('Reset this branch PIN to 1234? They will be asked to set a new PIN on next login.')) return;
+  try{
+    const {error} = await sb.rpc('lease_admin_reset_pin', {p_dp_code:dp, p_new_pin:'1234'});
+    if(error) throw error;
+    toast('PIN reset to 1234');
+  }catch(e){ toast('Reset failed'); }
+}
+
+// ===================== BRANCH DETAIL (view full data + admin edit) =====================
+function openDetail(dp){
+  const b = branches.find(x=>x.dp_code===dp);
+  if(!b) return;
+  currentDetailDp = dp;
+  document.getElementById('detail-title').textContent = b.branch_name;
+  document.getElementById('detail-sub').textContent = `DP Code ${b.dp_code} · ${b.stats.filledCount}/${b.stats.total} fields filled (${b.stats.pct}%)`;
+
+  let html='';
+  SECTIONS.forEach(section=>{
+    const applicableFields = section.fields.filter(f=>fieldApplicable(f,b));
+    if(applicableFields.length===0) return;
+    html += `<div class="detail-section"><div class="ds-title">${section.title}</div>`;
+    applicableFields.forEach(f=>{
+      const val = b[f.k] ?? '';
+      const filled = isFilled(val);
+      html += `<div class="field">
+        <div class="field-label-row">
+          <label>${f.l}</label>
+          <span class="field-tag ${filled?'tag-filled':'tag-pending'}">${filled?'Filled':'Pending'}</span>
+        </div>
+        ${renderInput(f,val)}
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('detail-body').innerHTML = html;
+  document.getElementById('detail-msg').textContent='';
+  openModal('modal-detail');
+}
+function renderInput(f, val){
+  const id = 'det-'+f.k;
+  if(f.t==='select'){
+    let opts = `<option value="">-- Select --</option>`;
+    f.o.forEach(o=>{ opts += `<option value="${o}" ${val===o?'selected':''}>${o}</option>`; });
+    return `<select id="${id}" onchange="onDetailFieldChange('${f.k}', this.value)">${opts}</select>`;
+  }
+  if(f.t==='textarea'){ return `<textarea id="${id}" rows="2">${val}</textarea>`; }
+  const inputType = f.t==='tel'?'tel':(f.t==='number'?'number':(f.t==='date'?'date':'text'));
+  return `<input id="${id}" type="${inputType}" value="${val}">`;
+}
+function onDetailFieldChange(key, value){
+  // live-update the in-memory row so conditional fields re-render correctly when reopened
+  const b = branches.find(x=>x.dp_code===currentDetailDp);
+  if(b){ b[key]=value; b.stats = computeStats(b); }
+}
+async function saveDetail(){
+  const b = branches.find(x=>x.dp_code===currentDetailDp);
+  if(!b) return;
+  const payload = {};
+  ALL_FIELDS.forEach(f=>{
+    const el = document.getElementById('det-'+f.k);
+    if(el){ payload[f.k]=el.value; }
+  });
+  document.getElementById('detail-msg').textContent='Saving...';
+  try{
+    const {error} = await sb.rpc('lease_branch_save_data', {p_dp_code: currentDetailDp, p_payload: payload, p_updated_by:'ADMIN'});
+    if(error) throw error;
+    document.getElementById('detail-msg').textContent='Saved ✓';
+    await refreshData();
+    setTimeout(()=>closeModal('modal-detail'), 600);
+  }catch(e){ document.getElementById('detail-msg').textContent=''; toast('Save failed'); }
+}
+
+// ===================== FOLLOW-UP MESSAGE =====================
+function openFollowupModal(){
+  const list = branches.filter(b=>selected.has(b.dp_code));
+  if(list.length===0){ toast('Select at least one branch'); return; }
+  const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  let msg = `*PREMISES LEASE DATA — PENDING BRANCHES*\nRO Bengaluru North, GA Section\nAs on ${today}\n\n`;
+  list.sort((a,b)=>a.branch_name.localeCompare(b.branch_name)).forEach((b,i)=>{
+    msg += `${i+1}. *${b.branch_name}* (DP ${b.dp_code}) — ${b.stats.pct}% complete, ${b.stats.total-b.stats.filledCount} field(s) pending\n`;
+  });
+  msg += `\nKindly submit the balance details on the Lease Data Portal at the earliest. For any issue logging in, contact GA Section.\n\n— GA Section, RO Bengaluru North`;
+  document.getElementById('followup-text').value = msg;
+  openModal('modal-followup');
+}
+function copyFollowup(){
+  const txt = document.getElementById('followup-text').value;
+  navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy failed'));
+}
+function shareFollowupWhatsApp(){
+  const txt = document.getElementById('followup-text').value;
+  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+}
+
+// ===================== EXPORTS =====================
+function pendingRows(){
+  return branches.filter(b=>b.active && b.stats.pct<100)
+    .sort((a,b)=>a.stats.pct-b.stats.pct)
+    .map(b=>({
+      'DP Code': b.dp_code,
+      'Branch Name': b.branch_name,
+      'Branch Type': b.branch_type||'',
+      '% Complete': b.stats.pct,
+      'Fields Pending': b.stats.total - b.stats.filledCount,
+      'Pending Fields': b.stats.missing.map(f=>f.l).join(', '),
+      'Last Updated': b.updated_at ? new Date(b.updated_at).toLocaleDateString('en-IN') : '—',
+    }));
+}
+
+function exportPendingExcel(){
+  const rows = pendingRows();
+  if(rows.length===0){ toast('No pending branches 🎉'); return; }
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:9},{wch:28},{wch:18},{wch:11},{wch:14},{wch:60},{wch:13}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Pending Branches');
+  XLSX.writeFile(wb, `Lease_Pending_Report_${dateStamp()}.xlsx`);
+  toast('Excel report downloaded');
+}
+
+function exportPendingPDF(){
+  const rows = pendingRows();
+  if(rows.length===0){ toast('No pending branches 🎉'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape'});
+  doc.setFontSize(14); doc.setTextColor(10,61,104);
+  doc.text('Premises Lease Data — Pending Branches Report', 14, 14);
+  doc.setFontSize(9); doc.setTextColor(100);
+  doc.text(`RO Bengaluru North, GA Section · As on ${dateStamp(true)}`, 14, 20);
+  doc.autoTable({
+    startY:26,
+    head:[['DP Code','Branch Name','Type','% Complete','Pending Count','Pending Fields']],
+    body: rows.map(r=>[r['DP Code'], r['Branch Name'], r['Branch Type'], r['% Complete']+'%', r['Fields Pending'], r['Pending Fields']]),
+    styles:{fontSize:7.5, cellPadding:2},
+    headStyles:{fillColor:[10,61,104], textColor:255},
+    columnStyles:{5:{cellWidth:110}},
+    margin:{left:14,right:14},
+  });
+  doc.save(`Lease_Pending_Report_${dateStamp()}.pdf`);
+  toast('PDF report downloaded');
+}
+
+async function exportPendingImage(){
+  const rows = pendingRows();
+  if(rows.length===0){ toast('No pending branches 🎉'); return; }
+  const host = document.getElementById('report-render');
+  host.innerHTML = `
+    <div class="rep-head">
+      <div class="t1">Premises Lease Data — Pending Branches</div>
+      <div class="t2">RO Bengaluru North, GA Section · As on ${dateStamp(true)}</div>
+    </div>
+    <table>
+      <tr><th>#</th><th>DP Code</th><th>Branch</th><th>% Complete</th><th>Pending</th></tr>
+      ${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r['DP Code']}</td><td>${r['Branch Name']}</td><td>${r['% Complete']}%</td><td>${r['Fields Pending']} fields</td></tr>`).join('')}
+    </table>
+    <div class="rep-foot">Created by Pawan Singh · 894257</div>
+  `;
+  await new Promise(r=>setTimeout(r,50));
+  const canvas = await html2canvas(host, {scale:2, backgroundColor:'#ffffff'});
+  const link = document.createElement('a');
+  link.download = `Lease_Pending_Report_${dateStamp()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('Image report downloaded');
+}
+
+function exportFullExcel(){
+  const rows = branches.sort((a,b)=>a.branch_name.localeCompare(b.branch_name)).map((b,i)=>{
+    const obj = {'S.No': i+1};
+    EXPORT_COLUMNS.forEach(c=>{
+      let v;
+      if(c.key==='_dp') v = b.dp_code;
+      else if(c.key==='_name') v = b.branch_name;
+      else v = b[c.key] ?? '';
+      obj[c.label] = v;
+    });
+    return obj;
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'PDMS-LEASE MASTER DATA');
+  XLSX.writeFile(wb, `Lease_Full_Data_${dateStamp()}.xlsx`);
+  toast('Full data exported');
+}
+
+function dateStamp(human){
+  const d = new Date();
+  if(human) return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  return d.toISOString().slice(0,10);
+}
+
+// ===================== INIT =====================
+window.addEventListener('load', async ()=>{
+  if(sessionStorage.getItem('lease_admin_ok')==='1'){
+    showScreen('screen-dash');
+    await refreshData();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Premises Lease Data Portal</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A3D68">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --navy:#0A3D68; --navy-dark:#072A49; --gold:#C9A227; --gold-light:#E9C95D;
+    --bg:#F4F6F8; --card:#FFFFFF; --text:#1C2B36; --muted:#6B7B85;
+    --ok:#1E7A4C; --warn:#B8860B; --danger:#B3261E; --border:#E1E6EA;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{background:linear-gradient(135deg,var(--navy),var(--navy-dark));color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  .topbar .brand{display:flex;align-items:center;gap:10px;}
+  .topbar .brand .badge{width:34px;height:34px;border-radius:8px;background:var(--gold);color:var(--navy-dark);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+  .topbar .brand .titles{line-height:1.15;}
+  .topbar .brand .titles .t1{font-weight:700;font-size:14.5px;}
+  .topbar .brand .titles .t2{font-size:11px;opacity:.8;}
+  .topbar .logout{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 12px;border-radius:7px;font-size:12.5px;cursor:pointer;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;padding-bottom:60px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .center-screen{min-height:90vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .login-card{background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(10,61,104,.12);padding:30px 26px;width:100%;max-width:380px;}
+  .login-card .logo{width:56px;height:56px;border-radius:14px;background:var(--navy);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;margin:0 auto 14px;}
+  .login-card h1{font-size:18px;text-align:center;margin:0 0 4px;color:var(--navy-dark);}
+  .login-card .sub{text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:22px;}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--navy-dark);margin-bottom:6px;}
+  input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:14.5px;background:#fff;color:var(--text);font-family:inherit;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);}
+  .field{margin-bottom:14px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--navy);color:#fff;border:none;padding:12px 16px;border-radius:9px;font-size:14.5px;font-weight:600;cursor:pointer;width:100%;}
+  .btn:active{background:var(--navy-dark);}
+  .btn.gold{background:var(--gold);color:var(--navy-dark);}
+  .btn.outline{background:transparent;border:1.5px solid var(--navy);color:var(--navy);}
+  .btn.sm{width:auto;padding:9px 14px;font-size:13px;}
+  .err{color:var(--danger);font-size:12.5px;margin-top:8px;min-height:14px;}
+  .msg-ok{color:var(--ok);font-size:12.5px;margin-top:8px;}
+
+  .dash-head{background:var(--card);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(10,61,104,.06);}
+  .dash-head .bname{font-weight:700;font-size:16px;color:var(--navy-dark);}
+  .dash-head .bsub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .progress-row{display:flex;align-items:center;gap:12px;margin-top:14px;}
+  .progress-bar{flex:1;height:10px;background:var(--border);border-radius:6px;overflow:hidden;}
+  .progress-bar > div{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:6px;transition:width .3s;}
+  .progress-pct{font-weight:700;color:var(--navy-dark);font-size:14px;min-width:42px;text-align:right;}
+
+  .section-card{background:var(--card);border-radius:14px;padding:0;margin-bottom:12px;box-shadow:0 2px 10px rgba(10,61,104,.06);overflow:hidden;}
+  .section-head{padding:15px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .section-head .sh-left{flex:1;}
+  .section-head .sh-title{font-weight:700;font-size:14.5px;color:var(--navy-dark);}
+  .section-head .sh-status{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .section-head .chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .chip.done{background:#E6F4EC;color:var(--ok);}
+  .chip.partial{background:#FFF3DC;color:var(--warn);}
+  .chip.empty{background:#FDEAE8;color:var(--danger);}
+  .section-head .arrow{font-size:18px;color:var(--muted);transition:transform .2s;}
+  .section-body{display:none;padding:4px 16px 18px;border-top:1px solid var(--border);}
+  .section-body.open{display:block;}
+  .section-card.expanded .arrow{transform:rotate(180deg);}
+
+  .field-label-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+  .field-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;}
+  .tag-filled{background:#E6F4EC;color:var(--ok);}
+  .tag-pending{background:#FDEAE8;color:var(--danger);}
+  .hint{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  .save-row{display:flex;gap:10px;margin-top:6px;}
+  .save-row .btn{flex:1;}
+
+  footer{text-align:center;color:var(--muted);font-size:11.5px;padding:18px 0 8px;}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy-dark);color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div id="screen-login" class="screen active">
+  <div class="center-screen">
+    <div class="login-card">
+      <div class="logo">PL</div>
+      <h1>Premises Lease Data Portal</h1>
+      <div class="sub">RO Bengaluru North · Branch Login</div>
+      <div class="field">
+        <label>Branch DP Code</label>
+        <input type="number" id="login-dp" placeholder="e.g. 425" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>PIN</label>
+        <input type="password" id="login-pin" placeholder="4-digit PIN" inputmode="numeric" maxlength="6">
+      </div>
+      <button class="btn" id="btn-login" onclick="doLogin()">Login</button>
+      <div class="err" id="login-err"></div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-pinchange" class="screen">
+  <div class="center-screen">
+    <div class="login-card">
+      <div class="logo">PL</div>
+      <h1>Set a New PIN</h1>
+      <div class="sub">First login — please set your own PIN</div>
+      <div class="field">
+        <label>Current PIN</label>
+        <input type="password" id="pc-old" inputmode="numeric" maxlength="6">
+      </div>
+      <div class="field">
+        <label>New PIN (4-6 digits)</label>
+        <input type="password" id="pc-new" inputmode="numeric" maxlength="6">
+      </div>
+      <div class="field">
+        <label>Confirm New PIN</label>
+        <input type="password" id="pc-confirm" inputmode="numeric" maxlength="6">
+      </div>
+      <button class="btn" onclick="doChangePin()">Set PIN &amp; Continue</button>
+      <div class="err" id="pc-err"></div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-dash" class="screen">
+  <div class="topbar">
+    <div class="brand">
+      <div class="badge">PL</div>
+      <div class="titles">
+        <div class="t1" id="hdr-branch-name">Branch</div>
+        <div class="t2">Premises Lease Data Portal</div>
+      </div>
+    </div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+  <div class="wrap">
+    <div class="dash-head">
+      <div class="bname" id="dh-name">—</div>
+      <div class="bsub" id="dh-sub">—</div>
+      <div class="progress-row">
+        <div class="progress-bar"><div id="dh-bar" style="width:0%"></div></div>
+        <div class="progress-pct" id="dh-pct">0%</div>
+      </div>
+      <div class="hint" id="dh-hint" style="margin-top:8px;"></div>
+    </div>
+
+    <div id="sections-host"></div>
+
+    <footer>Created by Pawan Singh · 894257</footer>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+// ===================== CONFIG =====================
+const SUPABASE_URL = "https://ffbyevyaghwhudeunadc.supabase.co";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===================== FIELD DEFINITIONS =====================
+const SECTIONS = [
+  { id:'landlord', title:'Landlord Details', fields:[
+    {k:'landlord_name', l:'Name of Landlord', t:'text'},
+    {k:'landlord_type', l:'Type of Landlord', t:'select', o:['RESIDENT INDIAN','TRUST','STATE GOVT DEPT','CENTRAL GOVT DEPT','PSU','NRI','OTHERS']},
+    {k:'gst_type', l:'Landlord GST Type', t:'select', o:['REGISTERED GST VENDOR WITH COMMERCIAL LICENSE','UNREGISTERED GST VENDOR WITH COMMERCIAL LICENSE','REGISTERED/UNREGISTERED LANDLORD OF RESIDENTIAL PROPERTY','GOVT. AUTHORITY']},
+    {k:'gl_number', l:'GL Number', t:'select', o:['420020100','420083150','420020805 HSN 997211','420020805 HSN 997206','420085560']},
+    {k:'charge_type', l:'Charge Type', t:'select', o:['NORMAL CHARGE','REVERSE CHARGE MECHANISM']},
+    {k:'landlord_mobile', l:'Mobile No. of Landlord', t:'tel'},
+    {k:'landlord_pan', l:'PAN No. of Landlord', t:'text'},
+    {k:'landlord_gst', l:'GST No. of Landlord', t:'text'},
+    {k:'landlord_address', l:'Address of Landlord with State & Pincode', t:'textarea'},
+  ]},
+  { id:'building', title:'Building Details', fields:[
+    {k:'building_type', l:'Type of Building', t:'select', o:['COMMERCIAL','RESIDENTIAL']},
+    {k:'building_age', l:'Age of Building (Years)', t:'number'},
+    {k:'parking', l:'Parking Space', t:'select', o:['AVAILABLE','LIMITED PARKING AVAILABLE','NOT AVAILABLE']},
+    {k:'power_load', l:'Power Load (KW)', t:'number'},
+    {k:'construction_type', l:'Type of Construction', t:'text'},
+    {k:'frontage', l:'Frontage (in Feet)', t:'number'},
+    {k:'toilets', l:'Toilets', t:'select', o:['SINGLE TOILET EARMARKED FOR LADIES','SEPARATE TOILET FOR LADIES & GENTS','COMMON TOILET FOR LADIES & GENTS SHARED WITH OTHER OCCUPANTS','NO TOILET AVAILABLE']},
+    {k:'distance_police', l:'Distance from Police Station (KM)', t:'number'},
+    {k:'property_value', l:'Value of Property as on Date (in Lakh)', t:'number'},
+    {k:'last_painting_date', l:'Date of Last Painting', t:'date'},
+    {k:'last_renovation_date', l:'Date of Last Renovation', t:'date'},
+    {k:'location_type', l:'Type of Location', t:'select', o:['CENTRE OF CITY','ON HIGHWAY','NEAR TO HIGHWAY','NEAR BUS STAND','NEAR RAILWAY STATION','NEAR MARKET AREA','RESIDENTIAL AREA','COMMERCIAL AREA']},
+  ]},
+  { id:'atm', title:'ATM Details', fields:[
+    {k:'atm_area', l:'ATM Area (SFT)', t:'number'},
+    {k:'other_atm_count', l:'No. of Other ATM/Unit Under Branch Lease', t:'number'},
+    {k:'atm_id_capex', l:'ATM ID of CAPEX ATM (if available)', t:'text'},
+    {k:'ramp_atm', l:'Ramp Available in ATM', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'railing_atm', l:'Railing Available in ATM', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'ramp_atm_reason', l:'Reason for Non-Availability of Ramp in ATM', t:'text', showIf:{k:'ramp_atm', eq:'NO'}},
+    {k:'ramp_atm_notice', l:'Notice Displayed for Non-Availability of Ramp in ATM', t:'select', o:['YES','NO','NOT REQUIRED'], showIf:{k:'ramp_atm', eq:'NO'}},
+  ]},
+  { id:'access', title:'Branch Accessibility', fields:[
+    {k:'ramp_branch', l:'Ramp Available in Branch', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'railing_branch', l:'Railing Available in Branch', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'ramp_branch_notice', l:'Notice Displayed for Non-Availability of Ramp', t:'select', o:['YES','NO','NOT REQUIRED'], showIf:{k:'ramp_branch', eq:'NO'}},
+    {k:'ramp_branch_reason', l:'Ramp Not Required — Reason', t:'text', showIf:{k:'ramp_branch', eq:'NOT REQUIRED'}},
+    {k:'lift_available', l:'Lift Available', t:'select', o:['YES','NO','NOT REQUIRED']},
+  ]},
+  { id:'strongroom', title:'Strong Room & Safes', fields:[
+    {k:'strong_room_area', l:'Strong Room Area (SFT)', t:'number'},
+    {k:'partition_available', l:'Partition Bifurcating Strong Room & Locker Area', t:'select', o:['YES','NO','NOT REQUIRED']},
+    {k:'sufficient_trtl', l:'Sufficient Required Category TRTL Safes Available', t:'select', o:['YES','NO']},
+    {k:'trtl_a', l:'No. of TRTL Safe Type A', t:'number'},
+    {k:'trtl_bb', l:'No. of TRTL Safe Type BB', t:'number'},
+    {k:'trtl_others', l:'No. of TRTL Safe Type Others', t:'number'},
+  ]},
+  { id:'charges', title:'Other Charges', fields:[
+    {k:'other_outgoing', l:'Other Outgoing (Property Tax/Maintenance) Payable by Bank', t:'select', o:['YES','NO']},
+    {k:'other_outgoing_amount', l:'Annual Expense Amount (if Yes)', t:'number', showIf:{k:'other_outgoing', eq:'YES'}},
+  ]},
+];
+const ALL_FIELDS = SECTIONS.flatMap(s=>s.fields);
+
+// ===================== STATE =====================
+let session = JSON.parse(sessionStorage.getItem('lease_session')||'null');
+let branchData = {};
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+async function doLogin(){
+  const dp = document.getElementById('login-dp').value.trim();
+  const pin = document.getElementById('login-pin').value.trim();
+  const errEl = document.getElementById('login-err');
+  errEl.textContent='';
+  if(!dp || !pin){ errEl.textContent='Enter DP Code and PIN.'; return; }
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent='Checking...';
+  try{
+    const {data, error} = await sb.rpc('lease_branch_login', {p_dp_code: Number(dp), p_pin: pin});
+    if(error) throw error;
+    if(!data.success){
+      errEl.textContent = data.error === 'inactive' ? 'This branch is deactivated. Contact admin.' : 'Invalid DP Code or PIN.';
+      return;
+    }
+    session = {dp_code:data.dp_code, branch_name:data.branch_name, branch_type:data.branch_type};
+    sessionStorage.setItem('lease_session', JSON.stringify(session));
+    if(!data.pin_changed){
+      showScreen('screen-pinchange');
+    }else{
+      await enterDashboard();
+    }
+  }catch(e){
+    errEl.textContent = 'Connection error. Try again.';
+  }finally{
+    btn.disabled=false; btn.textContent='Login';
+  }
+}
+
+async function doChangePin(){
+  const oldPin = document.getElementById('pc-old').value.trim();
+  const newPin = document.getElementById('pc-new').value.trim();
+  const confirmPin = document.getElementById('pc-confirm').value.trim();
+  const errEl = document.getElementById('pc-err');
+  errEl.textContent='';
+  if(newPin.length<4){ errEl.textContent='New PIN must be at least 4 digits.'; return; }
+  if(newPin!==confirmPin){ errEl.textContent='PINs do not match.'; return; }
+  try{
+    const {data, error} = await sb.rpc('lease_branch_change_pin', {p_dp_code: session.dp_code, p_old_pin: oldPin, p_new_pin: newPin});
+    if(error) throw error;
+    if(!data){ errEl.textContent='Current PIN is incorrect.'; return; }
+    toast('PIN updated successfully');
+    await enterDashboard();
+  }catch(e){
+    errEl.textContent='Connection error. Try again.';
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem('lease_session');
+  session=null; branchData={};
+  document.getElementById('login-dp').value='';
+  document.getElementById('login-pin').value='';
+  showScreen('screen-login');
+}
+
+async function enterDashboard(){
+  document.getElementById('hdr-branch-name').textContent = session.branch_name;
+  document.getElementById('dh-name').textContent = session.branch_name;
+  document.getElementById('dh-sub').textContent = `DP Code: ${session.dp_code} · ${session.branch_type||''}`;
+  showScreen('screen-dash');
+  await loadData();
+  renderSections();
+}
+
+async function loadData(){
+  const {data, error} = await sb.rpc('lease_branch_get_data', {p_dp_code: session.dp_code});
+  if(error){ toast('Could not load data'); return; }
+  branchData = data || {};
+}
+
+function fieldApplicable(f){
+  if(!f.showIf) return true;
+  return branchData[f.showIf.k] === f.showIf.eq;
+}
+function isFilled(f){
+  const v = branchData[f.k];
+  return v!==null && v!==undefined && String(v).trim()!=='';
+}
+function sectionStats(section){
+  const applicable = section.fields.filter(fieldApplicable);
+  const filled = applicable.filter(isFilled);
+  return {total: applicable.length, filled: filled.length};
+}
+function overallStats(){
+  const applicable = ALL_FIELDS.filter(fieldApplicable);
+  const filled = applicable.filter(isFilled);
+  return {total: applicable.length, filled: filled.length};
+}
+
+function renderSections(){
+  const ov = overallStats();
+  const pct = ov.total? Math.round(ov.filled/ov.total*100) : 0;
+  document.getElementById('dh-bar').style.width = pct+'%';
+  document.getElementById('dh-pct').textContent = pct+'%';
+  document.getElementById('dh-hint').textContent = pct===100
+    ? 'All details submitted. Thank you!'
+    : `${ov.total-ov.filled} field(s) pending out of ${ov.total}. Tap a section below to fill in.`;
+
+  const host = document.getElementById('sections-host');
+  host.innerHTML = '';
+  SECTIONS.forEach(section=>{
+    const st = sectionStats(section);
+    const chipClass = st.filled===0 ? 'empty' : (st.filled===st.total ? 'done':'partial');
+    const chipText = st.filled===0 ? 'Not Started' : (st.filled===st.total ? 'Complete' : `${st.filled}/${st.total}`);
+
+    const card = document.createElement('div');
+    card.className = 'section-card';
+    card.id = 'card-'+section.id;
+    card.innerHTML = `
+      <div class="section-head" onclick="toggleSection('${section.id}')">
+        <div class="sh-left">
+          <div class="sh-title">${section.title}</div>
+          <div class="sh-status">${st.filled} of ${st.total} fields filled</div>
+        </div>
+        <span class="chip ${chipClass}">${chipText}</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="section-body" id="body-${section.id}"></div>
+    `;
+    host.appendChild(card);
+    renderSectionFields(section);
+  });
+}
+
+function renderSectionFields(section){
+  const body = document.getElementById('body-'+section.id);
+  let html='';
+  section.fields.forEach(f=>{
+    if(!fieldApplicable(f)) return;
+    const filled = isFilled(f);
+    const val = branchData[f.k] ?? '';
+    html += `<div class="field" data-fieldwrap="${f.k}">
+      <div class="field-label-row">
+        <label>${f.l}</label>
+        <span class="field-tag ${filled?'tag-filled':'tag-pending'}">${filled?'Filled':'Pending'}</span>
+      </div>
+      ${renderInput(f, val)}
+    </div>`;
+  });
+  html += `<div class="save-row">
+      <button class="btn" onclick="saveSection('${section.id}')">Save This Section</button>
+    </div>
+    <div class="msg-ok" id="save-msg-${section.id}"></div>`;
+  body.innerHTML = html;
+
+  // attach change listeners for conditional fields within this section
+  section.fields.forEach(f=>{
+    const el = document.getElementById('inp-'+f.k);
+    if(el){
+      el.addEventListener('change', ()=>{
+        branchData[f.k] = el.value;
+        renderSections();
+        // re-open this section after re-render
+        const body2 = document.getElementById('body-'+section.id);
+        const card2 = document.getElementById('card-'+section.id);
+        if(body2){ body2.classList.add('open'); card2.classList.add('expanded'); }
+      });
+    }
+  });
+}
+
+function renderInput(f, val){
+  const id = 'inp-'+f.k;
+  if(f.t==='select'){
+    let opts = `<option value="">-- Select --</option>`;
+    f.o.forEach(o=>{ opts += `<option value="${o}" ${val===o?'selected':''}>${o}</option>`; });
+    return `<select id="${id}">${opts}</select>`;
+  }
+  if(f.t==='textarea'){
+    return `<textarea id="${id}" rows="2">${val}</textarea>`;
+  }
+  const inputType = f.t==='tel' ? 'tel' : (f.t==='number' ? 'number' : (f.t==='date' ? 'date' : 'text'));
+  return `<input id="${id}" type="${inputType}" value="${val}">`;
+}
+
+function toggleSection(id){
+  const body = document.getElementById('body-'+id);
+  const card = document.getElementById('card-'+id);
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  card.classList.toggle('expanded', !open);
+}
+
+async function saveSection(sectionId){
+  const section = SECTIONS.find(s=>s.id===sectionId);
+  const payload = {};
+  section.fields.forEach(f=>{
+    const el = document.getElementById('inp-'+f.k);
+    if(el){ payload[f.k] = el.value; }
+  });
+  const msgEl = document.getElementById('save-msg-'+sectionId);
+  msgEl.textContent = 'Saving...';
+  try{
+    const {error} = await sb.rpc('lease_branch_save_data', {
+      p_dp_code: session.dp_code, p_payload: payload, p_updated_by: session.branch_name
+    });
+    if(error) throw error;
+    Object.assign(branchData, payload);
+    msgEl.textContent = 'Saved successfully ✓';
+    renderSections();
+    const body2 = document.getElementById('body-'+sectionId);
+    const card2 = document.getElementById('card-'+sectionId);
+    if(body2){ body2.classList.add('open'); card2.classList.add('expanded'); }
+    setTimeout(()=>{ const m=document.getElementById('save-msg-'+sectionId); if(m) m.textContent=''; }, 2500);
+  }catch(e){
+    msgEl.textContent = '';
+    toast('Save failed — check connection');
+  }
+}
+
+// ===================== INIT =====================
+window.addEventListener('load', async ()=>{
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+  if(session && session.dp_code){
+    await enterDashboard();
+  }
+});
+</script>
+</body>
+</html>
